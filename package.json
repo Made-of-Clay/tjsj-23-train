@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@types/stats": "^0.16.30",
-    "@types/three": "^0.181.0",
+    "@types/three": "^0.183.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.6"
   },
