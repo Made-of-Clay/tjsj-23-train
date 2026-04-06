@@ -3,6 +3,7 @@ import { BoxGeometry, LoadingManager, Mesh, MeshLambertMaterial, PCFSoftShadowMa
 import "./style.css";
 import { addHelpers } from "./addHelpers";
 import { addLights } from "./addLights";
+import { Game } from "./Game";
 import { getScene } from "./getScene";
 import { ProjectCamera } from "./ProjectCamera";
 
@@ -27,6 +28,8 @@ scene.add(camera.instance);
 
 addHelpers();
 
+const game = new Game();
+
 // ===== 📈 STATS & CLOCK =====
 const stats = new Stats();
 document.body.appendChild(stats.dom);
@@ -37,6 +40,7 @@ function tick() {
     stats.begin();
 
     camera.tick(renderer);
+    game.tick();
 
     renderer.render(scene, camera.instance);
     stats.end();
