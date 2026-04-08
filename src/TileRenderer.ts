@@ -1,3 +1,4 @@
+import type { Scene } from "three";
 import {
     BoxGeometry,
     BufferGeometry,
@@ -14,9 +15,9 @@ import {
     PlaneGeometry,
     TorusGeometry,
 } from "three";
-import type { Scene } from "three";
+import type { GridCell } from "./GridCell.ts";
 import type { TileCell, TileOrientation, TileShape } from "./TileDefinitions.ts";
-import { getRotationRadians, getTileShape } from "./TileDefinitions.ts";
+import { getRotationRadians, getTileShape, TileKind } from "./TileDefinitions.ts";
 
 const defaultTileSize = 1;
 
@@ -26,9 +27,11 @@ export class TileRenderer {
     #tileSize: number;
     #shapeMeshes: Map<TileShape, InstancedMesh>;
     #shapeEdges: Map<TileShape, EdgesGeometry>;
+    #emptyTileEdges: EdgesGeometry;
     #emptyTileMesh!: InstancedMesh;
     #outlineGroup: Object3D;
     #outlineMaterial: LineBasicMaterial;
+    #selectedOutlineMaterial: LineBasicMaterial;
     #tempObject = new Object3D();
 
     constructor(scene: Scene, columns = 4, rows = 4, tileSize = defaultTileSize) {
@@ -39,10 +42,12 @@ export class TileRenderer {
         this.#shapeEdges = new Map();
         this.#outlineGroup = new Object3D();
         this.#outlineMaterial = new LineBasicMaterial({ color: 0x000000, linewidth: 3, depthTest: false });
+        this.#selectedOutlineMaterial = new LineBasicMaterial({ color: 0xffff00, linewidth: 4, depthTest: false });
 
         this.#createBoardFloor(scene);
         this.#createBoardGrid(scene);
         this.#createEmptyTiles(scene);
+        this.#emptyTileEdges = new EdgesGeometry(new PlaneGeometry(this.#tileSize * 0.96, this.#tileSize * 0.96), 15);
         scene.add(this.#outlineGroup);
 
         this.#createShapeMesh(scene, "straight", this.#createStraightTrackGeometry(), 0xd9d9d9);
@@ -50,7 +55,7 @@ export class TileRenderer {
         this.#createShapeMesh(scene, "station", this.#createStationGeometry(), 0xf2c94c);
     }
 
-    updateFromGrid(grid: TileCell[][]) {
+    updateFromGrid(grid: TileCell[][], selectedCell: GridCell | null = null) {
         const shapeCount = new Map<TileShape, number>([
             ["straight", 0],
             ["curve", 0],
@@ -77,6 +82,24 @@ export class TileRenderer {
                 this.#setInstanceTransform(shape, mesh, index, column, row, cell.orientation);
                 shapeCount.set(shape, index + 1);
                 this.#addOutlineForTile(shape, column, row, cell.orientation);
+            }
+        }
+
+        if (selectedCell) {
+            const selectedCellData = grid[selectedCell.row]?.[selectedCell.column];
+            if (selectedCellData) {
+                const selectedShape = getTileShape(selectedCellData.kind);
+                if (selectedShape) {
+                    this.#addOutlineForTile(
+                        selectedShape,
+                        selectedCell.column,
+                        selectedCell.row,
+                        selectedCellData.orientation,
+                        this.#selectedOutlineMaterial,
+                    );
+                } else if (selectedCellData.kind === TileKind.Empty) {
+                    this.#addOutlineForEmptyCell(selectedCell.column, selectedCell.row, this.#selectedOutlineMaterial);
+                }
             }
         }
 
@@ -158,11 +181,17 @@ export class TileRenderer {
         }
     }
 
-    #addOutlineForTile(shape: TileShape, column: number, row: number, orientation: TileOrientation) {
+    #addOutlineForTile(
+        shape: TileShape,
+        column: number,
+        row: number,
+        orientation: TileOrientation,
+        material: LineBasicMaterial = this.#outlineMaterial,
+    ) {
         const edges = this.#shapeEdges.get(shape);
         if (!edges) return;
 
-        const outline = new LineSegments(edges, this.#outlineMaterial);
+        const outline = new LineSegments(edges, material);
         const halfWidth = (this.#columns * this.#tileSize) / 2;
         const halfDepth = (this.#rows * this.#tileSize) / 2;
 
@@ -174,6 +203,22 @@ export class TileRenderer {
             row * this.#tileSize - halfDepth + this.#tileSize / 2,
         );
         outline.renderOrder = 999;
+        outline.material.depthTest = false;
+        this.#outlineGroup.add(outline);
+    }
+
+    #addOutlineForEmptyCell(column: number, row: number, material: LineBasicMaterial = this.#outlineMaterial) {
+        const outline = new LineSegments(this.#emptyTileEdges, material);
+        const halfWidth = (this.#columns * this.#tileSize) / 2;
+        const halfDepth = (this.#rows * this.#tileSize) / 2;
+
+        outline.rotation.set(-Math.PI / 2, 0, 0);
+        outline.position.set(
+            column * this.#tileSize - halfWidth + this.#tileSize / 2,
+            0.01,
+            row * this.#tileSize - halfDepth + this.#tileSize / 2,
+        );
+        outline.renderOrder = 999; // TODO learn more about this
         outline.material.depthTest = false;
         this.#outlineGroup.add(outline);
     }

@@ -1,3 +1,4 @@
+import type { GridCell } from "./GridCell.ts";
 import type { TileCell } from "./TileDefinitions.ts";
 import { DEFAULT_TILE_CELL, normalizeOrientation, TileKind, TileOrientation } from "./TileDefinitions.ts";
 import type { SelectedTile } from "./TileTray.ts";
@@ -13,6 +14,7 @@ export class Game {
     currentTime: number = 0;
     hasUpgrades = false;
     selectedTile: SelectedTile;
+    selectedGridCell: GridCell | null = null;
     tray: TileTray;
     #gridDirty = true;
 
@@ -44,8 +46,27 @@ export class Game {
         return this.tray.useSelectedTile();
     }
 
+    toggleTileSelection(columnIdx: number, rowIdx: number) {
+        if (!this.#isValidPosition(columnIdx, rowIdx)) return;
+
+        const currentlySelected = this.selectedGridCell;
+        if (currentlySelected?.column === columnIdx && currentlySelected.row === rowIdx) {
+            this.selectedGridCell = null;
+        } else {
+            this.selectedGridCell = { column: columnIdx, row: rowIdx };
+        }
+
+        this.#gridDirty = true;
+    }
+
     clearTile(columnIdx: number, rowIdx: number) {
         if (!this.#isValidPosition(columnIdx, rowIdx)) return;
+
+        if (this.selectedGridCell?.column === columnIdx && this.selectedGridCell.row === rowIdx) {
+            this.selectedGridCell = null;
+        } else {
+            console.warn("WTF? Analyze what happened here");
+        }
 
         this.grid[rowIdx][columnIdx] = { ...DEFAULT_TILE_CELL };
         this.#gridDirty = true;
