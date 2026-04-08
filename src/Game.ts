@@ -1,52 +1,83 @@
+import type { TileCell } from "./TileDefinitions.ts";
+import { DEFAULT_TILE_CELL, normalizeOrientation, TileKind, TileOrientation } from "./TileDefinitions.ts";
+import type { SelectedTile } from "./TileTray.ts";
+import { TileTray } from "./TileTray.ts";
+
+function createEmptyGrid(rows: number, columns: number): TileCell[][] {
+    return Array.from({ length: rows }, () => Array.from({ length: columns }, () => ({ ...DEFAULT_TILE_CELL })));
+}
+
 export class Game {
-    grid: number[][];
+    grid: TileCell[][];
     targetTime: number = 0;
     currentTime: number = 0;
     hasUpgrades = false;
-    selectedTile: number | null = null;
+    selectedTile: SelectedTile;
+    tray: TileTray;
+    #gridDirty = true;
 
-    constructor() {
-        this.grid = [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-        ];
+    constructor(columns = 4, rows = 4) {
+        this.grid = createEmptyGrid(rows, columns);
+        this.selectedTile = {
+            kind: TileKind.Straight,
+            orientation: TileOrientation.North,
+        };
+        this.tray = new TileTray();
     }
 
-    setTile(columnIdx: number, rowIdx: number, tile: number) {
-        this.grid[rowIdx][columnIdx] = tile;
+    setTile(columnIdx: number, rowIdx: number, kind: TileKind, orientation: TileOrientation) {
+        if (!this.#isValidPosition(columnIdx, rowIdx)) return;
+
+        this.grid[rowIdx][columnIdx] = {
+            kind,
+            orientation: normalizeOrientation(orientation),
+        };
         this.hasUpgrades = true;
+        this.#gridDirty = true;
+    }
+
+    placeSelectedTileAt(columnIdx: number, rowIdx: number) {
+        if (!this.tray.canPlaceSelected()) return false;
+        if (!this.#isValidPosition(columnIdx, rowIdx)) return false;
+
+        this.setTile(columnIdx, rowIdx, this.selectedTile.kind, this.selectedTile.orientation);
+        return this.tray.useSelectedTile();
+    }
+
+    clearTile(columnIdx: number, rowIdx: number) {
+        if (!this.#isValidPosition(columnIdx, rowIdx)) return;
+
+        this.grid[rowIdx][columnIdx] = { ...DEFAULT_TILE_CELL };
+        this.#gridDirty = true;
+    }
+
+    rotateSelectedTile(clockwise = true) {
+        const step = clockwise ? 1 : -1;
+        this.selectedTile.orientation = normalizeOrientation(this.selectedTile.orientation + step);
+    }
+
+    rotateTileAt(columnIdx: number, rowIdx: number, clockwise = true) {
+        if (!this.#isValidPosition(columnIdx, rowIdx)) return;
+
+        const current = this.grid[rowIdx][columnIdx];
+        if (current.kind === TileKind.Empty) return;
+
+        const step = clockwise ? 1 : -1;
+        this.grid[rowIdx][columnIdx].orientation = normalizeOrientation(current.orientation + step);
+        this.#gridDirty = true;
+    }
+
+    consumeGridDirtyFlag() {
+        const changed = this.#gridDirty;
+        this.#gridDirty = false;
+        return changed;
     }
 
     tick() {
-        // TODO: implement game logic here
-        // what goes in the game tick?
-        // all games have start/end stations
-        // player clicks tile tray to select tile, then clicks on grid to place tile
-        // placing a tile ++ currentTime by tile.timeCost
-        // Show currentTime and targetTime on the UI with black letters when under, green when currentTime === targetTime
-        // and red when currentTime > targetTime.
-        // Tile tray has options for player to place. (TODO create TileTray class to manage this)
-        //
+        // TODO: update timers, route validation, and game flow.
+    }
+
+    #isValidPosition(columnIdx: number, rowIdx: number) {
+        return rowIdx >= 0 && rowIdx < this.grid.length && columnIdx >= 0 && columnIdx < this.grid[0].length;
     }
 }
-
-// TODO move to another file
-// tile tray shows tiles
-// click tile in tray and click spot on board/grid to place tile
-// continue highlighting/outlining selected tile and showing UI tools for remove/rotate/move
-// clicking off selected either selects another tile or deselects if is default tile (0 / empty) or off-grid
-// each tile has time cost
-// tile graphics are either empty (grass?), vertical track (N to S), horizontal track (E to W), or curved track (NE, NW, SE, SW)
-// tile graphics for stations (start/end) are grass w/ building and train track on one NWSW side
-// once a track is complete from start/end, should it glow or draw a line in the track with green (good) or red (bad)?
-// vertical/horizontal track are same instanced tile but rotated; tile "id" treats as different but graphic is same dup instance
-// curved track is same instanced tile but rotated; tile "id" treats as different but graphic is same dup instance
-// Code treats them as different tiles but they are the same tile with different rotation; this allows for easier
-// tile placement and rotation logic, but requires more tile instances in the tile tray.
-// Tray shows small number (badge UI element) of how many of each tile the player has available to place; placing a tile
-// decrements the count; if count is 0, tile is grayed out and cannot be selected until player has more of that tile (TODO
-// implement logic for how player gets more tiles).
-
-export class TileTray {}
