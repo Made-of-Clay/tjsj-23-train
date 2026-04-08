@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "tjsj-REPLACE-ME",
+    "site": "tjsj-train",
     "public": "dist",
     "ignore": [
       "firebase.json",
