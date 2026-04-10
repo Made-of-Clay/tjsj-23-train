@@ -11,6 +11,11 @@ export interface SelectedTile {
     orientation: TileOrientation;
 }
 
+export interface TrayUIState {
+    buttons: HTMLButtonElement[];
+    orientationLabel: HTMLSpanElement;
+}
+
 export class TileTray {
     entries: TileTrayEntry[];
     selected: SelectedTile;
@@ -51,5 +56,25 @@ export class TileTray {
         if (!entry || entry.count === 0) return false;
         entry.count -= 1;
         return true;
+    }
+
+    updateUI(state: TrayUIState, getOrientationLabel: (orientation: number) => string) {
+        const selectedKind = this.selected.kind;
+
+        for (let index = 0; index < this.entries.length; index += 1) {
+            const entry = this.entries[index];
+            const button = state.buttons[index];
+            const isSelected = entry.kind === selectedKind;
+
+            button.classList.toggle("selected", isSelected);
+            button.disabled = entry.count === 0;
+
+            const countSpan = button.querySelector(".tileTray__item-count");
+            if (countSpan) {
+                countSpan.textContent = String(entry.count);
+            }
+        }
+
+        state.orientationLabel.textContent = `Orientation: ${getOrientationLabel(this.selected.orientation)}`;
     }
 }

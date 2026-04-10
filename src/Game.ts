@@ -1,6 +1,6 @@
 import type { GridCell } from "./GridCell.ts";
-import type { TileCell } from "./TileDefinitions.ts";
-import { DEFAULT_TILE_CELL, normalizeOrientation, TileKind, TileOrientation } from "./TileDefinitions.ts";
+import type { TileCell, TileOrientation } from "./TileDefinitions.ts";
+import { DEFAULT_TILE_CELL, normalizeOrientation, TileKind } from "./TileDefinitions.ts";
 import type { SelectedTile } from "./TileTray.ts";
 import { TileTray } from "./TileTray.ts";
 
@@ -20,11 +20,8 @@ export class Game {
 
     constructor(columns = 4, rows = 4) {
         this.grid = createEmptyGrid(rows, columns);
-        this.selectedTile = {
-            kind: TileKind.Straight,
-            orientation: TileOrientation.North,
-        };
         this.tray = new TileTray();
+        this.selectedTile = this.tray.selected;
     }
 
     setTile(columnIdx: number, rowIdx: number, kind: TileKind, orientation: TileOrientation) {
