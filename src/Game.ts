@@ -1,8 +1,8 @@
 import type { GridCell } from "./GridCell.ts";
 import type { TileCell, TileOrientation } from "./TileDefinitions.ts";
 import { DEFAULT_TILE_CELL, normalizeOrientation, TileKind } from "./TileDefinitions.ts";
-import type { SelectedTile } from "./TileTray.ts";
-import { TileTray } from "./TileTray.ts";
+import type { SelectedTile } from "./TileTray/TileTray.ts";
+import { TileTray } from "./TileTray/TileTray.ts";
 
 function createEmptyGrid(rows: number, columns: number): TileCell[][] {
     return Array.from({ length: rows }, () => Array.from({ length: columns }, () => ({ ...DEFAULT_TILE_CELL })));

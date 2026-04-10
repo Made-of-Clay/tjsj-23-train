@@ -69,7 +69,7 @@ export class TileTray {
             button.classList.toggle("selected", isSelected);
             button.disabled = entry.count === 0;
 
-            const countSpan = button.querySelector(".tileTray__item-count");
+            const countSpan = button.querySelector(".tileTray__itemCount");
             if (countSpan) {
                 countSpan.textContent = String(entry.count);
             }
