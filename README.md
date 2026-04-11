@@ -1,31 +1,18 @@
-# Three.js Vite Template with TypeScript
+# Three.js Journey, Challenge 23: Train
 
-Three.js + Vite + TypeScript starter
+April 2026's challenge  is themed "trains." I'm making a simple tile placement game inspired by the Spider-man (PS4) mini-game for completing electrical circuits (Peter's work with Octavius). Circuits become train tracks, required voltage becomes travel time, and start/end circuits become train stations.
 
----
+I'm also experimenting with more agentic coding (as I don't have the time I want to do it by hand - just being real). I must bobble between free LLMs (hobby budget of $0), so I'll experiment with multi-modal interaction also.
 
-![screenshot](docs/preview.png)
+## AGENTS
 
----
-
-## ⚡ Quick Cloning Command
-
-From [Community Notes - Getting Started | Vite](https://vite.dev/guide/#community-templates)
-
-```bash
-npx degit Made-of-Clay/vite-threejs-ts-template my-project
-cd my-project
-# my version of project init deviates this way
-pnpm i
-pnpm dev
-```
+For full project context and details, see `AGENT-AGNOSTIC/PROJECT.md`.
 
 ## Tech Stack
 
 - Three.js
 - TypeScript
 - Vite
-
 
 ## CLI Commands
 
@@ -70,3 +57,15 @@ Firebase is my current static hosting provider.
 
 - Ensure project builds without error/lint (this breaks/stops builds).
 - Push files to remote and what actions for a successful build/deployment.
+
+## TODOs
+
+- add time tracking (adding/removing should update game state)
+  - add time data to tiles
+  - add target time (to complete the puzzle)
+  - add current time (accumulated from tiles)
+- add path validation
+  - straight tile has path on edges 0 & 2 or 1 & 3 indicating path edges
+  - curved tile has path on edges 0 & 1, 1 & 2, 2 & 3 indicating path edges
+  - path edges must touch to continue path to next tile
+- add blocked tiles (i.e. tiles that cannot be removed)
