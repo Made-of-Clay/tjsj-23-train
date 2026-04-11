@@ -54,6 +54,7 @@ canvas.addEventListener("pointerdown", (event) => {
 
     const cell = game.grid[row][column];
     if (cell.kind === TileKind.Empty && game.tray.canPlaceSelected() && game.placeSelectedTileAt(column, row)) {
+        game.toggleTileSelection(column, row); // i.e. auto-select newly-placed tile
         return;
     }
 

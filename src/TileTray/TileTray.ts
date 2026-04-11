@@ -21,6 +21,10 @@ export class TileTray extends HTMLElement {
     #rotateLeftBtn: HTMLButtonElement | null = null;
     #rotateRightBtn: HTMLButtonElement | null = null;
     #listContainer: HTMLElement | null = null;
+    #hasSelectedPlacedTile: boolean = false;
+    #onRotatePlaced: ((clockwise: boolean) => void) | null = null;
+    #onRemovePlaced: (() => void) | null = null;
+    #removeBtn: HTMLButtonElement | null = null;
 
     get entries(): TileTrayEntry[] {
         return this.#entries;
@@ -87,8 +91,14 @@ export class TileTray extends HTMLElement {
             this.#rotateLeftBtn = rotateButtons[0] as HTMLButtonElement;
             this.#rotateRightBtn = rotateButtons[1] as HTMLButtonElement;
 
-            this.#rotateLeftBtn.addEventListener("click", () => this.#handleRotate(false));
-            this.#rotateRightBtn.addEventListener("click", () => this.#handleRotate(true));
+            this.#rotateLeftBtn.addEventListener("click", () => this.#handleRotate(true)); // clockwise
+            this.#rotateRightBtn.addEventListener("click", () => this.#handleRotate(false)); // counterclockwise
+        }
+
+        // Set up remove button
+        this.#removeBtn = this.shadowRoot.querySelector(".tileTray__remove");
+        if (this.#removeBtn) {
+            this.#removeBtn.addEventListener("click", () => this.#handleRemove());
         }
 
         this.#updateUI();
@@ -97,6 +107,13 @@ export class TileTray extends HTMLElement {
     selectKind(kind: TileKind) {
         if (kind === TileKind.Empty) return;
         this.#selected.kind = kind;
+        this.#updateUI();
+    }
+
+    setSelectedPlacedTile(hasSelected: boolean, onRotate: (clockwise: boolean) => void, onRemove: () => void) {
+        this.#hasSelectedPlacedTile = hasSelected;
+        this.#onRotatePlaced = onRotate;
+        this.#onRemovePlaced = onRemove;
         this.#updateUI();
     }
 
@@ -128,7 +145,17 @@ export class TileTray extends HTMLElement {
     }
 
     #handleRotate(clockwise: boolean) {
-        this.rotateSelected(clockwise);
+        if (this.#hasSelectedPlacedTile && typeof this.#onRotatePlaced === "function") {
+            this.#onRotatePlaced(clockwise);
+        } else {
+            this.rotateSelected(clockwise);
+        }
+    }
+
+    #handleRemove() {
+        if (this.#hasSelectedPlacedTile && typeof this.#onRemovePlaced === "function") {
+            this.#onRemovePlaced();
+        }
     }
 
     #updateUI() {
@@ -155,6 +182,11 @@ export class TileTray extends HTMLElement {
         if (this.#orientationLabel) {
             const label = ORIENTATION_LABELS[this.#selected.orientation] ?? "N/A";
             this.#orientationLabel.textContent = `Orientation: ${label}`;
+        }
+
+        // Update remove button visibility
+        if (this.#removeBtn) {
+            this.#removeBtn.style.display = this.#hasSelectedPlacedTile ? "block" : "none";
         }
     }
 }

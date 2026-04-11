@@ -196,7 +196,9 @@ export class TileRenderer {
         const halfDepth = (this.#rows * this.#tileSize) / 2;
 
         const xRotation = shape === "curve" ? -Math.PI / 2 : 0;
-        outline.rotation.set(xRotation, getRotationRadians(orientation), 0);
+        const yRotation = shape === "curve" ? 0 : getRotationRadians(orientation);
+        const zRotation = shape === "curve" ? getRotationRadians(orientation) : 0;
+        outline.rotation.set(xRotation, yRotation, zRotation);
         outline.position.set(
             column * this.#tileSize - halfWidth + this.#tileSize / 2,
             0.045,
@@ -265,7 +267,9 @@ export class TileRenderer {
         );
 
         const xRotation = shape === "curve" ? -Math.PI / 2 : 0;
-        this.#tempObject.rotation.set(xRotation, getRotationRadians(orientation), 0);
+        const yRotation = shape === "curve" ? 0 : getRotationRadians(orientation);
+        const zRotation = shape === "curve" ? getRotationRadians(orientation) : 0;
+        this.#tempObject.rotation.set(xRotation, yRotation, zRotation);
         this.#tempObject.updateMatrix();
         mesh.setMatrixAt(index, this.#tempObject.matrix);
     }

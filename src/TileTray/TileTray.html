@@ -110,6 +110,26 @@
             font-weight: 600;
             letter-spacing: 0.05em;
         }
+
+        .tileTray__remove {
+            margin-top: 0.75rem;
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border-radius: 1rem;
+            border: none;
+            background: rgba(255, 0, 0, 0.18);
+            color: inherit;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: background 0.2s ease, transform 0.2s ease;
+            display: none;
+        }
+
+        .tileTray__remove:hover {
+            background: rgba(255, 0, 0, 0.25);
+            transform: translateY(-1px);
+        }
     </style>
 
     <aside class="tileTray">
@@ -120,5 +140,6 @@
             <span class="tileTray__orientation">Orientation: N</span>
             <button type="button" class="tileTray__rotate" title="Rotate clockwise">⟳</button>
         </div>
+        <button type="button" class="tileTray__remove">Remove</button>
     </aside>
 </template>

@@ -21,6 +21,7 @@ export class Game {
         this.grid = createEmptyGrid(rows, columns);
         this.tray = tray;
         this.selectedTile = this.tray.selected;
+        this.#updateTraySelectedPlaced();
     }
 
     setTile(columnIdx: number, rowIdx: number, kind: TileKind, orientation: TileOrientation) {
@@ -53,6 +54,7 @@ export class Game {
         }
 
         this.#gridDirty = true;
+        this.#updateTraySelectedPlaced();
     }
 
     clearTile(columnIdx: number, rowIdx: number) {
@@ -66,6 +68,7 @@ export class Game {
 
         this.grid[rowIdx][columnIdx] = { ...DEFAULT_TILE_CELL };
         this.#gridDirty = true;
+        this.#updateTraySelectedPlaced();
     }
 
     rotateSelectedTile(clockwise = true) {
@@ -96,5 +99,21 @@ export class Game {
 
     #isValidPosition(columnIdx: number, rowIdx: number) {
         return rowIdx >= 0 && rowIdx < this.grid.length && columnIdx >= 0 && columnIdx < this.grid[0].length;
+    }
+
+    #updateTraySelectedPlaced() {
+        this.tray.setSelectedPlacedTile(
+            !!this.selectedGridCell,
+            (clockwise) => {
+                if (this.selectedGridCell) {
+                    this.rotateTileAt(this.selectedGridCell.column, this.selectedGridCell.row, clockwise);
+                }
+            },
+            () => {
+                if (this.selectedGridCell) {
+                    this.clearTile(this.selectedGridCell.column, this.selectedGridCell.row);
+                }
+            },
+        );
     }
 }
