@@ -12,15 +12,22 @@ export class Game {
     targetTime: number = 0;
     currentTime: number = 0;
     hasUpgrades = false;
-    selectedTile: SelectedTile;
     selectedGridCell: GridCell | null = null;
     tray: TileTray;
     #gridDirty = true;
 
+    get selectedTile(): SelectedTile {
+        return this.tray.selected;
+    }
+
     constructor(tray: TileTray, columns = 4, rows = 4) {
         this.grid = createEmptyGrid(rows, columns);
         this.tray = tray;
-        this.selectedTile = this.tray.selected;
+        this.tray.setOnSelectKind(() => {
+            this.selectedGridCell = null;
+            this.#gridDirty = true;
+            this.#updateTraySelectedPlaced();
+        });
         this.#updateTraySelectedPlaced();
     }
 
@@ -72,8 +79,7 @@ export class Game {
     }
 
     rotateSelectedTile(clockwise = true) {
-        const step = clockwise ? 1 : -1;
-        this.selectedTile.orientation = normalizeOrientation(this.selectedTile.orientation + step);
+        this.tray.rotateSelected(clockwise);
     }
 
     rotateTileAt(columnIdx: number, rowIdx: number, clockwise = true) {

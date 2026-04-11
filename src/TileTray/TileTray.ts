@@ -24,6 +24,7 @@ export class TileTray extends HTMLElement {
     #hasSelectedPlacedTile: boolean = false;
     #onRotatePlaced: ((clockwise: boolean) => void) | null = null;
     #onRemovePlaced: (() => void) | null = null;
+    #onSelectKind: ((kind: TileKind) => void) | null = null;
     #removeBtn: HTMLButtonElement | null = null;
 
     get entries(): TileTrayEntry[] {
@@ -117,6 +118,10 @@ export class TileTray extends HTMLElement {
         this.#updateUI();
     }
 
+    setOnSelectKind(callback: (kind: TileKind) => void) {
+        this.#onSelectKind = callback;
+    }
+
     rotateSelected(clockwise = true) {
         if (this.#selected.kind === TileKind.Empty) return;
         const step = clockwise ? 1 : -1;
@@ -142,6 +147,7 @@ export class TileTray extends HTMLElement {
 
     #handleSelectKind(kind: TileKind) {
         this.selectKind(kind);
+        if (this.#onSelectKind) this.#onSelectKind(kind);
     }
 
     #handleRotate(clockwise: boolean) {
