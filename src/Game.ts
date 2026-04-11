@@ -1,8 +1,7 @@
 import type { GridCell } from "./GridCell.ts";
 import type { TileCell, TileOrientation } from "./TileDefinitions.ts";
 import { DEFAULT_TILE_CELL, normalizeOrientation, TileKind } from "./TileDefinitions.ts";
-import type { SelectedTile } from "./TileTray/TileTray.ts";
-import { TileTray } from "./TileTray/TileTray.ts";
+import type { SelectedTile, TileTray } from "./TileTray/TileTray.ts";
 
 function createEmptyGrid(rows: number, columns: number): TileCell[][] {
     return Array.from({ length: rows }, () => Array.from({ length: columns }, () => ({ ...DEFAULT_TILE_CELL })));
@@ -18,9 +17,9 @@ export class Game {
     tray: TileTray;
     #gridDirty = true;
 
-    constructor(columns = 4, rows = 4) {
+    constructor(tray: TileTray, columns = 4, rows = 4) {
         this.grid = createEmptyGrid(rows, columns);
-        this.tray = new TileTray();
+        this.tray = tray;
         this.selectedTile = this.tray.selected;
     }
 

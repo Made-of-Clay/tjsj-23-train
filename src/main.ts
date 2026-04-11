@@ -9,7 +9,7 @@ import { getScene } from "./getScene";
 import { ProjectCamera } from "./ProjectCamera";
 import { TileKind } from "./TileDefinitions";
 import { TileRenderer } from "./TileRenderer";
-import { TileTray } from "./TileTray/TileTray.ts";
+import type { TileTray } from "./TileTray/TileTray.ts";
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
@@ -26,12 +26,12 @@ scene.add(camera.instance);
 
 addHelpers();
 
-const game = new Game();
+const tray = document.querySelector<TileTray>("tile-tray");
+if (!tray)
+    throw new ReferenceError("TileTray element not found. Make sure <tile-tray></tile-tray> is present in the HTML.");
+const game = new Game(tray);
 const tileRenderer = new TileRenderer(scene);
 tileRenderer.updateFromGrid(game.grid, game.selectedGridCell);
-
-const tray = new TileTray();
-document.body.appendChild(tray);
 
 const raycaster = new Raycaster();
 const pointer = new Vector2();
