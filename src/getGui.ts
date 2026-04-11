@@ -7,6 +7,11 @@ export const guiConf = {
 };
 
 export function getGui() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const showGui = urlParams.has("gui");
+
+    if (!showGui) return null;
+
     if (!gui) gui = new GUI({ title: "🐞 Debug GUI", width: 300 });
 
     return gui;

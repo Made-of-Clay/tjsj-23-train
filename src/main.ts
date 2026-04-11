@@ -61,22 +61,31 @@ canvas.addEventListener("pointerdown", (event) => {
 });
 
 // ===== 📈 STATS & CLOCK =====
-const stats = new Stats();
-document.body.appendChild(stats.dom);
-handleStatsDisplay(guiConf.showStats);
-
+let stats: Stats | null = null;
 const gui = getGui();
-gui.add(guiConf, "showStats").name("Show Stats").onChange(handleStatsDisplay);
+if (gui) {
+    stats = new Stats();
+    const handleStatsDisplay = (showStats: boolean) =>
+        stats?.dom.style.setProperty("display", showStats ? "block" : "none");
+    document.body.appendChild(stats.dom);
+    handleStatsDisplay(guiConf.showStats);
 
-function handleStatsDisplay(value: boolean) {
-    stats.dom.style.setProperty("display", value ? "block" : "none");
-    value ? stats.begin() : stats.end();
+    if (gui) {
+        gui.add(guiConf, "showStats")
+            .name("Show Stats")
+            .onChange((value: boolean) => {
+                if (stats) {
+                    handleStatsDisplay(value);
+                    value ? stats.begin() : stats.end();
+                }
+            });
+    }
 }
 
 function tick() {
     requestAnimationFrame(tick);
 
-    stats.begin();
+    if (gui && stats) stats.begin();
 
     camera.tick(renderer);
     game.tick();
@@ -86,7 +95,8 @@ function tick() {
     }
 
     renderer.render(scene, camera.instance);
-    stats.end();
+
+    if (gui && stats) stats.end();
 }
 
 tick();

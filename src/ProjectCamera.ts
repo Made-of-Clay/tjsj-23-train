@@ -7,11 +7,13 @@ export class ProjectCamera {
     instance: OrthographicCamera;
     #canvas: HTMLCanvasElement;
     zoom: number = 1;
-    #cameraFolder: GUI;
+    #cameraFolder: GUI | null = null;
 
     constructor(canvas: HTMLCanvasElement) {
         const gui = getGui();
-        this.#cameraFolder = gui.addFolder("Camera");
+        if (gui) {
+            this.#cameraFolder = gui.addFolder("Camera");
+        }
 
         this.#canvas = canvas;
         const width = canvas.clientWidth;
@@ -36,6 +38,8 @@ export class ProjectCamera {
     }
 
     #addGuiControls() {
+        if (!this.#cameraFolder) return;
+
         const lookAtCenter = () => this.instance.lookAt(0, 0, 0);
         this.#cameraFolder.add(this.instance.position, "x", -10, 10, 0.1).onChange(lookAtCenter);
         this.#cameraFolder.add(this.instance.position, "y", -10, 10, 0.1).onChange(lookAtCenter);
