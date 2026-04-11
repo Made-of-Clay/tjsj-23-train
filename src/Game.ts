@@ -64,6 +64,14 @@ export class Game {
         this.#updateTraySelectedPlaced();
     }
 
+    clearSelectedGridCell() {
+        if (this.selectedGridCell === null) return;
+
+        this.selectedGridCell = null;
+        this.#gridDirty = true;
+        this.#updateTraySelectedPlaced();
+    }
+
     clearTile(columnIdx: number, rowIdx: number) {
         if (!this.#isValidPosition(columnIdx, rowIdx)) return;
 

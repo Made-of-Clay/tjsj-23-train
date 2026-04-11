@@ -50,7 +50,10 @@ canvas.addEventListener("pointerdown", (event) => {
     const column = Math.floor(intersectionPoint.x + halfWidth);
     const row = Math.floor(intersectionPoint.z + halfDepth);
 
-    if (column < 0 || column >= game.grid[0].length || row < 0 || row >= game.grid.length) return;
+    if (column < 0 || column >= game.grid[0].length || row < 0 || row >= game.grid.length) {
+        game.clearSelectedGridCell();
+        return;
+    }
 
     const cell = game.grid[row][column];
     if (cell.kind === TileKind.Empty && game.tray.canPlaceSelected() && game.placeSelectedTileAt(column, row)) {
