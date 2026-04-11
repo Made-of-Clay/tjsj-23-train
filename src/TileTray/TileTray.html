@@ -123,12 +123,16 @@
             font-size: 0.95rem;
             font-weight: 600;
             transition: background 0.2s ease, transform 0.2s ease;
-            display: none;
         }
 
         .tileTray__remove:hover {
             background: rgba(255, 0, 0, 0.25);
             transform: translateY(-1px);
+        }
+        
+        .tileTray button[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 
@@ -136,9 +140,13 @@
         <div class="tileTray__header">Tile Tray</div>
         <div class="tileTray__list"></div>
         <div class="tileTray__controls">
-            <button type="button" class="tileTray__rotate" title="Rotate counterclockwise">⟲</button>
+            <button type="button" class="tileTray__rotate" title="Rotate counterclockwise">
+                ⟲
+            </button>
             <span class="tileTray__orientation">Orientation: N</span>
-            <button type="button" class="tileTray__rotate" title="Rotate clockwise">⟳</button>
+            <button type="button" class="tileTray__rotate" title="Rotate clockwise">
+                ⟳
+            </button>
         </div>
         <button type="button" class="tileTray__remove">Remove</button>
     </aside>

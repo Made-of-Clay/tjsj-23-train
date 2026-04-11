@@ -190,10 +190,11 @@ export class TileTray extends HTMLElement {
             this.#orientationLabel.textContent = `Orientation: ${label}`;
         }
 
-        // Update remove button visibility
-        if (this.#removeBtn) {
-            this.#removeBtn.style.display = this.#hasSelectedPlacedTile ? "block" : "none";
-        }
+        // Enable rotate controls when a tray tile is selected or a placed tile is selected
+        const rotateDisabled = !this.canPlaceSelected() && !this.#hasSelectedPlacedTile;
+        if (this.#rotateLeftBtn) this.#rotateLeftBtn.disabled = rotateDisabled;
+        if (this.#rotateRightBtn) this.#rotateRightBtn.disabled = rotateDisabled;
+        if (this.#removeBtn) this.#removeBtn.disabled = !this.#hasSelectedPlacedTile;
     }
 }
 
