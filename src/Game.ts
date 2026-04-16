@@ -1,16 +1,22 @@
 import type { GridCell } from "./GridCell.ts";
-import type { TileCell, TileOrientation } from "./TileDefinitions.ts";
-import { DEFAULT_TILE_CELL, normalizeOrientation, TileKind } from "./TileDefinitions.ts";
+import { DEFAULT_PUZZLE, type Puzzle } from "./PuzzleDefinition.ts";
+import {
+    DEFAULT_TILE_CELL,
+    getTileDefinition,
+    normalizeOrientation,
+    type TileCell,
+    TileKind,
+    TileOrientation,
+} from "./TileDefinitions.ts";
 import type { SelectedTile, TileTray } from "./TileTray/TileTray.ts";
-
-function createEmptyGrid(rows: number, columns: number): TileCell[][] {
-    return Array.from({ length: rows }, () => Array.from({ length: columns }, () => ({ ...DEFAULT_TILE_CELL })));
-}
 
 export class Game {
     grid: TileCell[][];
+    puzzle: Puzzle;
     targetTime: number = 0;
     currentTime: number = 0;
+    gameWon = false;
+    statusMessage = "";
     hasUpgrades = false;
     selectedGridCell: GridCell | null = null;
     tray: TileTray;
@@ -20,9 +26,21 @@ export class Game {
         return this.tray.selected;
     }
 
-    constructor(tray: TileTray, columns = 4, rows = 4) {
-        this.grid = createEmptyGrid(rows, columns);
+    constructor(tray: TileTray, puzzle: Puzzle = DEFAULT_PUZZLE) {
+        this.puzzle = puzzle;
+        // Convert initTiles (number[][]) to TileCell[][], assuming default North orientation
+        this.grid = puzzle.initTiles.map((row) =>
+            row.map((kind) => ({
+                kind: kind as TileKind,
+                orientation: TileOrientation.North,
+            })),
+        );
         this.tray = tray;
+        this.tray.setInventory(puzzle.tileInventory);
+        this.targetTime = puzzle.targetTime;
+        this.statusMessage =
+            this.targetTime > 0 ? `Match the target time of ${this.targetTime}.` : "Place tiles to set the total time.";
+        this.#recalculateTimeAndCheckWin();
         this.tray.setOnSelectKind(() => {
             this.selectedGridCell = null;
             this.#gridDirty = true;
@@ -40,14 +58,20 @@ export class Game {
         };
         this.hasUpgrades = true;
         this.#gridDirty = true;
+        this.#recalculateTimeAndCheckWin();
     }
 
     placeSelectedTileAt(columnIdx: number, rowIdx: number) {
+        if (this.gameWon) return false;
         if (!this.tray.canPlaceSelected()) return false;
         if (!this.#isValidPosition(columnIdx, rowIdx)) return false;
 
         this.setTile(columnIdx, rowIdx, this.selectedTile.kind, this.selectedTile.orientation);
-        return this.tray.useSelectedTile();
+        const placed = this.tray.useSelectedTile();
+        if (!placed) {
+            this.clearTile(columnIdx, rowIdx);
+        }
+        return placed;
     }
 
     toggleTileSelection(columnIdx: number, rowIdx: number) {
@@ -84,6 +108,7 @@ export class Game {
         this.grid[rowIdx][columnIdx] = { ...DEFAULT_TILE_CELL };
         this.#gridDirty = true;
         this.#updateTraySelectedPlaced();
+        this.#recalculateTimeAndCheckWin();
     }
 
     rotateSelectedTile(clockwise = true) {
@@ -99,6 +124,7 @@ export class Game {
         const step = clockwise ? 1 : -1;
         this.grid[rowIdx][columnIdx].orientation = normalizeOrientation(current.orientation + step);
         this.#gridDirty = true;
+        this.#recalculateTimeAndCheckWin();
     }
 
     consumeGridDirtyFlag() {
@@ -108,7 +134,34 @@ export class Game {
     }
 
     tick() {
-        // TODO: update timers, route validation, and game flow.
+        // Keep the game state synchronized every frame for UI updates.
+        if (this.gameWon) {
+            this.statusMessage = "Perfect! You matched the target time.";
+        }
+    }
+
+    #recalculateTimeAndCheckWin() {
+        this.currentTime = this.grid.reduce((sum, row) => {
+            return (
+                sum +
+                row.reduce((rowSum, tile) => {
+                    return rowSum + (tile.kind === TileKind.Empty ? 0 : getTileDefinition(tile.kind).timeCost);
+                }, 0)
+            );
+        }, 0);
+
+        this.gameWon = this.#checkWinCondition();
+        if (this.gameWon) {
+            this.statusMessage = `Perfect! You matched the target time of ${this.targetTime}.`;
+        } else if (this.currentTime > this.targetTime) {
+            this.statusMessage = `Over target by ${this.currentTime - this.targetTime}.`;
+        } else {
+            this.statusMessage = `Match the target time of ${this.targetTime}.`;
+        }
+    }
+
+    #checkWinCondition() {
+        return this.targetTime > 0 && this.currentTime === this.targetTime;
     }
 
     #isValidPosition(columnIdx: number, rowIdx: number) {

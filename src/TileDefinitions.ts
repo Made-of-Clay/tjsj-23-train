@@ -1,8 +1,14 @@
+// AI: don't change this
 export enum TileKind {
     Empty = 0,
-    Straight = 1,
-    Curve = 2,
-    Station = 3,
+    Locked = 1,
+    Start = 2, // Station
+    End = 3, // Station
+    NW = 4, // straight
+    WE = 5, // straight
+    NE = 6, // curve
+    SE = 7, // curve
+    SW = 8, // curve
 }
 
 export enum TileOrientation {
@@ -42,29 +48,69 @@ export const TILE_DEFINITIONS: { [kind in TileKind]: TileDefinition } = {
         canRotate: false,
         color: 0x4a6a33,
     },
-    [TileKind.Straight]: {
-        kind: TileKind.Straight,
-        name: "Straight Track",
+    [TileKind.Locked]: {
+        kind: TileKind.Locked,
+        name: "Locked",
+        shape: null,
+        timeCost: 0,
+        canRotate: false,
+        color: 0x808080,
+    },
+    [TileKind.Start]: {
+        kind: TileKind.Start,
+        name: "Start Station",
+        shape: "station",
+        timeCost: 3,
+        canRotate: true,
+        color: 0xf2c94c,
+    },
+    [TileKind.End]: {
+        kind: TileKind.End,
+        name: "End Station",
+        shape: "station",
+        timeCost: 3,
+        canRotate: true,
+        color: 0xf2c94c,
+    },
+    [TileKind.NW]: {
+        kind: TileKind.NW,
+        name: "North-West Track",
         shape: "straight",
         timeCost: 1,
         canRotate: true,
         color: 0xd9d9d9,
     },
-    [TileKind.Curve]: {
-        kind: TileKind.Curve,
-        name: "Curved Track",
+    [TileKind.WE]: {
+        kind: TileKind.WE,
+        name: "West-East Track",
+        shape: "straight",
+        timeCost: 1,
+        canRotate: true,
+        color: 0xd9d9d9,
+    },
+    [TileKind.NE]: {
+        kind: TileKind.NE,
+        name: "North-East Track",
         shape: "curve",
         timeCost: 2,
         canRotate: true,
         color: 0xd9d9d9,
     },
-    [TileKind.Station]: {
-        kind: TileKind.Station,
-        name: "Station",
-        shape: "station",
-        timeCost: 3,
+    [TileKind.SE]: {
+        kind: TileKind.SE,
+        name: "South-East Track",
+        shape: "curve",
+        timeCost: 2,
         canRotate: true,
-        color: 0xf2c94c,
+        color: 0xd9d9d9,
+    },
+    [TileKind.SW]: {
+        kind: TileKind.SW,
+        name: "South-West Track",
+        shape: "curve",
+        timeCost: 2,
+        canRotate: true,
+        color: 0xd9d9d9,
     },
 };
 

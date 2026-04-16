@@ -39,13 +39,9 @@ export class TileTray extends HTMLElement {
         super();
         this.attachShadow({ mode: "open" });
 
-        this.#entries = [
-            { kind: TileKind.Straight, count: 8 },
-            { kind: TileKind.Curve, count: 6 },
-            { kind: TileKind.Station, count: 2 },
-        ];
+        this.#entries = [];
         this.#selected = {
-            kind: TileKind.Straight,
+            kind: TileKind.NW,
             orientation: 0,
         };
     }
@@ -122,6 +118,20 @@ export class TileTray extends HTMLElement {
         this.#onSelectKind = callback;
     }
 
+    setInventory(inventory: { tileKind: number; count: number }[]) {
+        this.#entries = inventory.map(({ tileKind, count }) => ({
+            kind: tileKind as TileKind,
+            count,
+        }));
+        // Select first available if current selection is invalid
+        if (!this.#entries.some((e) => e.kind === this.#selected.kind)) {
+            this.#selected.kind = this.#entries[0]?.kind ?? TileKind.Empty;
+        }
+        if (this.shadowRoot) {
+            this.#rebuildUI();
+        }
+    }
+
     rotateSelected(clockwise = true) {
         if (this.#selected.kind === TileKind.Empty) return;
         const step = clockwise ? 1 : -1;
@@ -162,6 +172,39 @@ export class TileTray extends HTMLElement {
         if (this.#hasSelectedPlacedTile && typeof this.#onRemovePlaced === "function") {
             this.#onRemovePlaced();
         }
+    }
+
+    #rebuildUI() {
+        if (!this.#listContainer) return;
+        // Clear existing buttons
+        this.#buttons.forEach((button) => {
+            button.remove();
+        });
+        this.#buttons = [];
+        // Recreate buttons from entries
+        for (const entry of this.#entries) {
+            const tileDef = TILE_DEFINITIONS[entry.kind];
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "tileTray__item";
+            button.dataset.kind = String(entry.kind);
+
+            const labelSpan = document.createElement("span");
+            labelSpan.className = "tileTray__itemLabel";
+            labelSpan.textContent = tileDef.name;
+
+            const countSpan = document.createElement("span");
+            countSpan.className = "tileTray__itemCount";
+            countSpan.textContent = String(entry.count);
+
+            button.appendChild(labelSpan);
+            button.appendChild(countSpan);
+
+            button.addEventListener("click", () => this.#handleSelectKind(entry.kind));
+            this.#listContainer.appendChild(button);
+            this.#buttons.push(button);
+        }
+        this.#updateUI();
     }
 
     #updateUI() {

@@ -7,12 +7,38 @@ import { Game } from "./Game";
 import { getGui, guiConf } from "./getGui";
 import { getScene } from "./getScene";
 import { ProjectCamera } from "./ProjectCamera";
+import { DEFAULT_PUZZLE, PUZZLES } from "./PuzzleDefinition";
 import { TileKind } from "./TileDefinitions";
 import { TileRenderer } from "./TileRenderer";
 import type { TileTray } from "./TileTray/TileTray.ts";
 
+function createTimeDisplayElement() {
+    const container = document.createElement("div");
+    container.id = "time-display";
+    container.innerHTML = `
+        <div class="timeDisplay__title">Time Target</div>
+        <div class="timeDisplay__value" id="time-display-value">0 / 0</div>
+        <div class="timeDisplay__message" id="time-display-message"></div>
+    `;
+    document.body.appendChild(container);
+    return container;
+}
+
+function updateTimeDisplay(game: Game, display: HTMLElement) {
+    const value = display.querySelector<HTMLDivElement>("#time-display-value");
+    const message = display.querySelector<HTMLDivElement>("#time-display-message");
+    if (!value || !message) return;
+
+    value.textContent = `${game.currentTime} / ${game.targetTime}`;
+    display.classList.toggle("timeDisplay--green", game.currentTime === game.targetTime && game.targetTime > 0);
+    display.classList.toggle("timeDisplay--red", game.currentTime > game.targetTime);
+    display.classList.toggle("timeDisplay--neutral", game.currentTime < game.targetTime);
+    message.textContent = game.statusMessage;
+}
+
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
+const timeOverlay = createTimeDisplayElement();
 const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
@@ -29,8 +55,8 @@ addHelpers();
 const tray = document.querySelector<TileTray>("tile-tray");
 if (!tray)
     throw new ReferenceError("TileTray element not found. Make sure <tile-tray></tile-tray> is present in the HTML.");
-const game = new Game(tray);
-const tileRenderer = new TileRenderer(scene);
+const game = new Game(tray, PUZZLES[0] ?? DEFAULT_PUZZLE);
+const tileRenderer = new TileRenderer(scene, game.puzzle.initTiles[0].length, game.puzzle.initTiles.length);
 tileRenderer.updateFromGrid(game.grid, game.selectedGridCell);
 
 const raycaster = new Raycaster();
@@ -98,6 +124,7 @@ function tick() {
         tileRenderer.updateFromGrid(game.grid, game.selectedGridCell);
     }
 
+    updateTimeDisplay(game, timeOverlay);
     renderer.render(scene, camera.instance);
 
     if (gui && stats) stats.end();
