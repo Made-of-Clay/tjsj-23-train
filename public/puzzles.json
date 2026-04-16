@@ -1,17 +1,8 @@
 [
   {
-    "initTiles": [
-      [2, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 3, 0],
-      [0, 0, 0, 0]
-    ],
+    "initTiles": [[2, 0, 0, 0], [0, 0, 0, 0], [0, 0, 3, 0], [0, 0, 0, 0]],
     "description": "Default 4x4 target time puzzle",
     "targetTime": 5,
-    "tileInventory": [
-      { "tileKind": 4, "count": 8 },
-      { "tileKind": 6, "count": 6 },
-      { "tileKind": 2, "count": 2 }
-    ]
+    "tileInventory": [{ "tileKind": 4, "count": 8 }, { "tileKind": 6, "count": 6 }, { "tileKind": 2, "count": 2 }]
   }
 ]

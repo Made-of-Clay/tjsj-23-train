@@ -6,7 +6,7 @@ export interface Puzzle {
     initTiles: number[][];
     description?: string;
     targetTime: number;
-    tileInventory: { tileKind: number; count: number; }[];
+    tileInventory: { tileKind: number; count: number }[];
 }
 
 export const PUZZLES: Puzzle[] = puzzlesData as Puzzle[];
