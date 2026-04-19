@@ -1,5 +1,3 @@
-import puzzlesData from "../public/puzzles.json";
-
 export type TileType = "straight" | "turn" | "station";
 
 export interface Puzzle {
@@ -9,10 +7,16 @@ export interface Puzzle {
     tileInventory: { tileKind: number; count: number }[];
 }
 
-export const PUZZLES: Puzzle[] = puzzlesData as Puzzle[];
+let cachedPuzzles: Puzzle[] = [];
 
-export const DEFAULT_PUZZLE = PUZZLES[0];
-
-export function getRandPuzzle(): Puzzle {
-    return PUZZLES[Math.floor(Math.random() * PUZZLES.length)];
+export async function getRandPuzzle(): Promise<Puzzle | null> {
+    if (!cachedPuzzles.length) {
+        try {
+            const response = await fetch("/puzzles.json").then((res) => res.json());
+            cachedPuzzles = response;
+        } catch (error) {
+            console.error("Failed to load puzzles:", error);
+        }
+    }
+    return cachedPuzzles[Math.floor(Math.random() * cachedPuzzles.length)] ?? null;
 }

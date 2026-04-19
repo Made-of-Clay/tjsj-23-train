@@ -7,10 +7,8 @@ import { Game } from "./Game";
 import { getGui, guiConf } from "./getGui";
 import { getScene } from "./getScene";
 import { ProjectCamera } from "./ProjectCamera";
-import { DEFAULT_PUZZLE, PUZZLES } from "./PuzzleDefinition";
 import { TileKind } from "./TileDefinitions";
 import { TileRenderer } from "./TileRenderer";
-import type { TileTray } from "./TileTray/TileTray.ts";
 
 function createTimeDisplayElement() {
     const container = document.createElement("div");
@@ -22,18 +20,6 @@ function createTimeDisplayElement() {
     `;
     document.body.appendChild(container);
     return container;
-}
-
-function updateTimeDisplay(game: Game, display: HTMLElement) {
-    const value = display.querySelector<HTMLDivElement>("#time-display-value");
-    const message = display.querySelector<HTMLDivElement>("#time-display-message");
-    if (!value || !message) return;
-
-    value.textContent = `${game.currentTime} / ${game.targetTime}`;
-    display.classList.toggle("timeDisplay--green", game.currentTime === game.targetTime && game.targetTime > 0);
-    display.classList.toggle("timeDisplay--red", game.currentTime > game.targetTime);
-    display.classList.toggle("timeDisplay--neutral", game.currentTime < game.targetTime);
-    message.textContent = game.statusMessage;
 }
 
 const canvas = document.createElement("canvas");
@@ -52,43 +38,65 @@ scene.add(camera.instance);
 
 addHelpers();
 
-const tray = document.querySelector<TileTray>("tile-tray");
-if (!tray)
-    throw new ReferenceError("TileTray element not found. Make sure <tile-tray></tile-tray> is present in the HTML.");
-const game = new Game(tray, PUZZLES[0] ?? DEFAULT_PUZZLE);
-const tileRenderer = new TileRenderer(scene, game.puzzle.initTiles[0].length, game.puzzle.initTiles.length);
-tileRenderer.updateFromGrid(game.grid, game.selectedGridCell);
+let tileRenderer: TileRenderer;
 
-const raycaster = new Raycaster();
-const pointer = new Vector2();
-const clickPlane = new Plane(new Vector3(0, 1, 0), 0);
-const intersectionPoint = new Vector3();
+const game = new Game();
+game.ready
+    .then(() => {
+        if (!game) {
+            throw new ReferenceError("Game instance is not available after initialization.");
+        }
+        if (!game.puzzle) {
+            throw new ReferenceError("Puzzle data is not available in the Game instance.");
+        }
+        if (!game.grid?.length || !game.grid[0].length) {
+            throw new ReferenceError("Grid data is not available in the Game instance.");
+        }
+        tileRenderer = new TileRenderer(scene, game.puzzle.initTiles[0].length, game.puzzle.initTiles.length);
+        tileRenderer.updateFromGrid(game.grid, game.selectedGridCell);
 
-canvas.addEventListener("pointerdown", (event) => {
-    pointer.x = (event.clientX / canvas.clientWidth) * 2 - 1;
-    pointer.y = -(event.clientY / canvas.clientHeight) * 2 + 1;
+        const raycaster = new Raycaster();
+        const pointer = new Vector2();
+        const clickPlane = new Plane(new Vector3(0, 1, 0), 0);
+        const intersectionPoint = new Vector3();
 
-    raycaster.setFromCamera(pointer, camera.instance);
-    if (!raycaster.ray.intersectPlane(clickPlane, intersectionPoint)) return;
+        canvas.addEventListener("pointerdown", (event) => {
+            if (!game.grid?.length || !game.grid[0].length) {
+                throw new ReferenceError("Grid data is not available in the Game instance.");
+            }
+            if (!game.tray) {
+                throw new ReferenceError("TileTray instance is not available in the Game instance.");
+            }
 
-    const halfWidth = game.grid[0].length * 0.5;
-    const halfDepth = game.grid.length * 0.5;
-    const column = Math.floor(intersectionPoint.x + halfWidth);
-    const row = Math.floor(intersectionPoint.z + halfDepth);
+            pointer.x = (event.clientX / canvas.clientWidth) * 2 - 1;
+            pointer.y = -(event.clientY / canvas.clientHeight) * 2 + 1;
 
-    if (column < 0 || column >= game.grid[0].length || row < 0 || row >= game.grid.length) {
-        game.clearSelectedGridCell();
-        return;
-    }
+            raycaster.setFromCamera(pointer, camera.instance);
+            if (!raycaster.ray.intersectPlane(clickPlane, intersectionPoint)) return;
 
-    const cell = game.grid[row][column];
-    if (cell.kind === TileKind.Empty && game.tray.canPlaceSelected() && game.placeSelectedTileAt(column, row)) {
-        game.toggleTileSelection(column, row); // i.e. auto-select newly-placed tile
-        return;
-    }
+            const halfWidth = game.grid[0].length * 0.5;
+            const halfDepth = game.grid.length * 0.5;
+            const column = Math.floor(intersectionPoint.x + halfWidth);
+            const row = Math.floor(intersectionPoint.z + halfDepth);
 
-    game.toggleTileSelection(column, row);
-});
+            if (column < 0 || column >= game.grid[0].length || row < 0 || row >= game.grid.length) {
+                game.clearSelectedGridCell();
+                return;
+            }
+
+            const cell = game.grid[row][column];
+            if (cell.kind === TileKind.Empty && game.tray.canPlaceSelected() && game.placeSelectedTileAt(column, row)) {
+                game.toggleTileSelection(column, row); // i.e. auto-select newly-placed tile
+                return;
+            }
+
+            game.toggleTileSelection(column, row);
+        });
+    })
+    .catch((error) => {
+        console.error("Failed to initialize the game:", error);
+        alert("An error occurred while initializing the game. Please try again later.");
+    });
 
 // ===== 📈 STATS & CLOCK =====
 let stats: Stats | null = null;
@@ -112,6 +120,25 @@ if (gui) {
     }
 }
 
+function updateTimeDisplay(game: Game, display: HTMLElement) {
+    const value = display.querySelector<HTMLDivElement>("#time-display-value");
+    const message = display.querySelector<HTMLDivElement>("#time-display-message");
+    if (!value || !message || !game.puzzle) return;
+
+    if (game.puzzle?.targetTime <= 0) {
+        throw new ReferenceError("Game instance does not have a valid targetTime property.");
+    }
+
+    value.textContent = `${game.currentTime} / ${game.puzzle.targetTime}`;
+    display.classList.toggle(
+        "timeDisplay--green",
+        game.currentTime === game.puzzle.targetTime && game.puzzle.targetTime > 0,
+    );
+    display.classList.toggle("timeDisplay--red", game.currentTime > game.puzzle.targetTime);
+    display.classList.toggle("timeDisplay--neutral", game.currentTime < game.puzzle.targetTime);
+    message.textContent = game.statusMessage;
+}
+
 function tick() {
     requestAnimationFrame(tick);
 
@@ -120,7 +147,7 @@ function tick() {
     camera.tick(renderer);
     game.tick();
 
-    if (game.consumeGridDirtyFlag()) {
+    if (game.consumeGridDirtyFlag() && game.grid) {
         tileRenderer.updateFromGrid(game.grid, game.selectedGridCell);
     }
 

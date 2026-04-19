@@ -4,11 +4,14 @@ export enum TileKind {
     Locked = 1,
     Start = 2, // Station
     End = 3, // Station
-    NW = 4, // straight
+    // TODO clicking rotate on 4 toggles to 5, then back to 4 (NS to WE)
+    NS = 4, // straight
     WE = 5, // straight
+    // TODO clicking rotate on 6 toggles between 6-9 (NE-SE-SW-NW)
     NE = 6, // curve
     SE = 7, // curve
     SW = 8, // curve
+    NW = 4, // straight
 }
 
 export enum TileOrientation {

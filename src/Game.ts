@@ -1,5 +1,5 @@
 import type { GridCell } from "./GridCell.ts";
-import { DEFAULT_PUZZLE, type Puzzle } from "./PuzzleDefinition.ts";
+import { getRandPuzzle, type Puzzle } from "./PuzzleDefinition.ts";
 import {
     DEFAULT_TILE_CELL,
     getTileDefinition,
@@ -11,37 +11,32 @@ import {
 import type { SelectedTile, TileTray } from "./TileTray/TileTray.ts";
 
 export class Game {
-    grid: TileCell[][];
-    puzzle: Puzzle;
-    targetTime: number = 0;
+    grid: TileCell[][] | null = null;
+    puzzle: Puzzle | null = null;
     currentTime: number = 0;
     gameWon = false;
     statusMessage = "";
     hasUpgrades = false;
     selectedGridCell: GridCell | null = null;
-    tray: TileTray;
+    tray: TileTray | null = null;
     #gridDirty = true;
+    ready: Promise<void>;
 
-    get selectedTile(): SelectedTile {
-        return this.tray.selected;
+    get selectedTile(): SelectedTile | null {
+        return this.tray?.selected ?? null;
     }
 
-    constructor(tray: TileTray, puzzle: Puzzle = DEFAULT_PUZZLE) {
-        this.puzzle = puzzle;
-        // Convert initTiles (number[][]) to TileCell[][], assuming default North orientation
-        this.grid = puzzle.initTiles.map((row) =>
-            row.map((kind) => ({
-                kind: kind as TileKind,
-                orientation: TileOrientation.North,
-            })),
-        );
-        this.tray = tray;
-        this.tray.setInventory(puzzle.tileInventory);
-        this.targetTime = puzzle.targetTime;
-        this.statusMessage =
-            this.targetTime > 0 ? `Match the target time of ${this.targetTime}.` : "Place tiles to set the total time.";
+    constructor() {
+        this.ready = this.#init();
+    }
+
+    async #init() {
+        this.#fetchTray();
+        await this.#fetchPuzzle();
+        this.#setGrid();
+        this.#setStatusMessage();
         this.#recalculateTimeAndCheckWin();
-        this.tray.setOnSelectKind(() => {
+        this.tray?.setOnSelectKind(() => {
             this.selectedGridCell = null;
             this.#gridDirty = true;
             this.#updateTraySelectedPlaced();
@@ -49,8 +44,53 @@ export class Game {
         this.#updateTraySelectedPlaced();
     }
 
+    #fetchTray() {
+        const tray = document.querySelector<TileTray>("tile-tray");
+        if (!tray) {
+            throw new ReferenceError(
+                "TileTray element not found. Make sure <tile-tray></tile-tray> is present in the HTML.",
+            );
+        }
+        this.tray = tray;
+    }
+
+    async #fetchPuzzle(): Promise<void> {
+        const puzzle = await getRandPuzzle();
+        if (!puzzle) {
+            throw new ReferenceError("Failed to fetch a random puzzle.");
+        }
+        this.puzzle = puzzle;
+    }
+
+    #setGrid() {
+        if (!this.puzzle) {
+            throw new ReferenceError("Puzzle not loaded yet.");
+        }
+        // Convert initTiles (number[][]) to TileCell[][], assuming default North orientation
+        this.grid = this.puzzle.initTiles.map((row) =>
+            row.map((kind) => ({
+                kind: kind as TileKind,
+                orientation: TileOrientation.North,
+            })),
+        );
+    }
+
+    #setStatusMessage() {
+        if (!this.puzzle) {
+            throw new ReferenceError("Puzzle not loaded yet.");
+        }
+        if ((this.puzzle?.targetTime ?? 0) <= 0) {
+            throw new Error("Invalid puzzle: targetTime must be greater than 0.");
+        }
+        this.statusMessage = `Match the target time of ${this.puzzle.targetTime}.`;
+    }
+
     setTile(columnIdx: number, rowIdx: number, kind: TileKind, orientation: TileOrientation) {
         if (!this.#isValidPosition(columnIdx, rowIdx)) return;
+
+        if (!this.grid) {
+            throw new ReferenceError("Grid not initialized yet.");
+        }
 
         this.grid[rowIdx][columnIdx] = {
             kind,
@@ -63,8 +103,14 @@ export class Game {
 
     placeSelectedTileAt(columnIdx: number, rowIdx: number) {
         if (this.gameWon) return false;
-        if (!this.tray.canPlaceSelected()) return false;
+        if (!this.tray?.canPlaceSelected()) return false;
         if (!this.#isValidPosition(columnIdx, rowIdx)) return false;
+
+        if (!this.selectedTile) {
+            throw new ReferenceError(
+                "Selected tile is null. This should not happen if canPlaceSelected() returned true.",
+            );
+        }
 
         this.setTile(columnIdx, rowIdx, this.selectedTile.kind, this.selectedTile.orientation);
         const placed = this.tray.useSelectedTile();
@@ -102,7 +148,11 @@ export class Game {
         if (this.selectedGridCell?.column === columnIdx && this.selectedGridCell.row === rowIdx) {
             this.selectedGridCell = null;
         } else {
-            console.warn("WTF? Analyze what happened here");
+            throw new Error("Attempted to clear a tile that wasn't selected. This should not happen.");
+        }
+
+        if (!this.grid) {
+            throw new ReferenceError("Grid not initialized yet.");
         }
 
         this.grid[rowIdx][columnIdx] = { ...DEFAULT_TILE_CELL };
@@ -112,11 +162,15 @@ export class Game {
     }
 
     rotateSelectedTile(clockwise = true) {
-        this.tray.rotateSelected(clockwise);
+        this.tray?.rotateSelected(clockwise);
     }
 
     rotateTileAt(columnIdx: number, rowIdx: number, clockwise = true) {
         if (!this.#isValidPosition(columnIdx, rowIdx)) return;
+
+        if (!this.grid) {
+            throw new ReferenceError("Grid not initialized yet.");
+        }
 
         const current = this.grid[rowIdx][columnIdx];
         if (current.kind === TileKind.Empty) return;
@@ -141,35 +195,52 @@ export class Game {
     }
 
     #recalculateTimeAndCheckWin() {
+        if (!this.puzzle) {
+            throw new ReferenceError("Puzzle not loaded yet.");
+        }
+
+        if (!this.grid) {
+            throw new ReferenceError("Grid not initialized yet.");
+        }
+
         this.currentTime = this.grid.reduce((sum, row) => {
             return (
                 sum +
-                row.reduce((rowSum, tile) => {
-                    return rowSum + (tile.kind === TileKind.Empty ? 0 : getTileDefinition(tile.kind).timeCost);
-                }, 0)
+                row.reduce(
+                    (rowSum, tile) =>
+                        rowSum + (tile.kind === TileKind.Empty ? 0 : getTileDefinition(tile.kind).timeCost),
+                    0,
+                )
             );
         }, 0);
 
         this.gameWon = this.#checkWinCondition();
         if (this.gameWon) {
-            this.statusMessage = `Perfect! You matched the target time of ${this.targetTime}.`;
-        } else if (this.currentTime > this.targetTime) {
-            this.statusMessage = `Over target by ${this.currentTime - this.targetTime}.`;
+            this.statusMessage = `Perfect! You matched the target time of ${this.puzzle.targetTime}.`;
+        } else if (this.currentTime > this.puzzle.targetTime) {
+            this.statusMessage = `Over target by ${this.currentTime - this.puzzle.targetTime}.`;
         } else {
-            this.statusMessage = `Match the target time of ${this.targetTime}.`;
+            this.statusMessage = `Match the target time of ${this.puzzle.targetTime}.`;
         }
     }
 
     #checkWinCondition() {
-        return this.targetTime > 0 && this.currentTime === this.targetTime;
+        if (!this.puzzle) {
+            throw new ReferenceError("Puzzle not loaded yet.");
+        }
+        return this.puzzle.targetTime > 0 && this.currentTime === this.puzzle.targetTime;
     }
 
     #isValidPosition(columnIdx: number, rowIdx: number) {
+        if (!this.grid) {
+            throw new ReferenceError("Grid not initialized yet.");
+        }
+
         return rowIdx >= 0 && rowIdx < this.grid.length && columnIdx >= 0 && columnIdx < this.grid[0].length;
     }
 
     #updateTraySelectedPlaced() {
-        this.tray.setSelectedPlacedTile(
+        this.tray?.setSelectedPlacedTile(
             !!this.selectedGridCell,
             (clockwise) => {
                 if (this.selectedGridCell) {
