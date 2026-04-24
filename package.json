@@ -12,7 +12,7 @@
     "check": "biome check src"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.10",
+    "@biomejs/biome": "2.4.13",
     "@types/stats": "^0.16.30",
     "@types/stats.js": "^0.17.4",
     "@types/three": "^0.183.1",
