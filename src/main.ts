@@ -6,7 +6,9 @@ import { addLights } from "./addLights";
 import { getGui, guiConf } from "./getGui";
 import { getScene } from "./getScene";
 import { ProjectCamera } from "./ProjectCamera";
+import { Train } from "./Train";
 
+// TODO add nice skybox for blue skies or space -- probably blue skies to match more playful theme
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
 const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -43,6 +45,12 @@ if (gui) {
             });
     }
 }
+
+const train = new Train();
+train.ready.then(() => {
+    // TODO add some loading screen or something, this is pretty jarring
+    console.log("Train model loaded");
+});
 
 function tick() {
     requestAnimationFrame(tick);
