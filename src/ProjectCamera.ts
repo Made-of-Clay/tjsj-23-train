@@ -3,6 +3,7 @@ import { OrthographicCamera, type WebGLRenderer } from "three";
 import { getGui } from "./getGui";
 import { resizeRendererToDisplaySize } from "./helpers/responsiveness";
 
+// TODO probably use perspective again instead
 export class ProjectCamera {
     instance: OrthographicCamera;
     #canvas: HTMLCanvasElement;
