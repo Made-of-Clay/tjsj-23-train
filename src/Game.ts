@@ -33,6 +33,15 @@ export class Game {
     async #init() {
         this.#fetchTray();
         await this.#fetchPuzzle();
+
+        if (!this.tray) {
+            throw new ReferenceError("TileTray instance not available after fetching.");
+        }
+        if (!this.puzzle) {
+            throw new ReferenceError("Puzzle data not available after fetching.");
+        }
+        this.tray.setInventory(this.puzzle.tileInventory);
+
         this.#setGrid();
         this.#setStatusMessage();
         this.#recalculateTimeAndCheckWin();
@@ -222,6 +231,7 @@ export class Game {
         } else {
             this.statusMessage = `Match the target time of ${this.puzzle.targetTime}.`;
         }
+        console.log(this.statusMessage, this.currentTime, this.puzzle.targetTime);
     }
 
     #checkWinCondition() {

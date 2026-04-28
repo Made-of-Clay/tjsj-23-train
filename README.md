@@ -1,5 +1,11 @@
 # Three.js Journey, Challenge 23: Train
 
+## TODO
+
+revive game by forking or something; game saved to branch `train-game`
+
+## Overview
+
 April 2026's challenge  is themed "trains." I'm making a simple tile placement game inspired by the Spider-man (PS4) mini-game for completing electrical circuits (Peter's work with Octavius). Circuits become train tracks, required voltage becomes travel time, and start/end circuits become train stations.
 
 I'm also experimenting with more agentic coding (as I don't have the time I want to do it by hand - just being real). I must bobble between free LLMs (hobby budget of $0), so I'll experiment with multi-modal interaction also.
