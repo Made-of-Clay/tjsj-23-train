@@ -80,7 +80,7 @@
 		},
 		{
 			"mesh":3,
-			"name":"Train",
+			"name":"Train.003",
 			"rotation":[
 				0,
 				-1,
@@ -119,7 +119,7 @@
 					}
 				}
 			],
-			"name":"Action",
+			"name":"Action.001",
 			"samplers":[
 				{
 					"input":24,
@@ -269,7 +269,7 @@
 			]
 		},
 		{
-			"name":"TrainData",
+			"name":"Plane.001",
 			"primitives":[
 				{
 					"attributes":{

@@ -32,15 +32,14 @@ export class Train {
                         return;
                     }
 
-                    model.traverse((child) => {
-                        console.log(child, `animations = ${child.animations.length}`);
-                        // if ((child as Mesh).isMesh) {
-                        //     const mesh = child as Mesh;
-                        //     // TODO evaluate this - not sure about it
-                        //     mesh.castShadow = true;
-                        //     mesh.receiveShadow = true;
-                        // }
-                    });
+                    // model.traverse((child) => {
+                    // if ((child as Mesh).isMesh) {
+                    //     const mesh = child as Mesh;
+                    //     // TODO evaluate this - not sure about it
+                    //     mesh.castShadow = true;
+                    //     mesh.receiveShadow = true;
+                    // }
+                    // });
 
                     this.#mixer = new AnimationMixer(model);
                     if (!gltf.animations[0]) {
@@ -90,7 +89,8 @@ export class Train {
 
     #addGrass() {
         // TODO implement
-        // add some grass planes with alpha textures to hide the hard edges of the train model
+        // add grass to "World" mesh with alpha textures
+        // make sway in wind
     }
 
     // @ts-expect-error dev testing
@@ -110,7 +110,7 @@ export class Train {
 
     animate(deltaTime: number) {
         if (this.#mixer) {
-            this.#mixer.update(deltaTime);
+            this.#mixer.update(deltaTime * 0.75);
         }
         if (this.model) {
             this.model.rotation.y += deltaTime * 0.1;
