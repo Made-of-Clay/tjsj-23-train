@@ -1,35 +1,29 @@
-import { AmbientLight, PointLight, PointLightHelper } from "three";
+import { AmbientLight, DirectionalLight, DirectionalLightHelper, PointLight, PointLightHelper } from "three";
 import { getGui } from "./getGui";
 import { getScene } from "./getScene";
 
 export function addLights() {
+    const scene = getScene();
     const gui = getGui();
     const lightsFolder = gui?.addFolder("Lights");
 
     const ambientLight = new AmbientLight("white", 0.25);
+    scene.add(ambientLight);
 
     if (lightsFolder) {
         lightsFolder.add(ambientLight, "visible").name("Ambient Light");
     }
 
-    const pointLight = new PointLight("white", 20, 100);
-    pointLight.position.set(2, 3, 2.25);
-    pointLight.castShadow = true;
-    pointLight.shadow.radius = 4;
-    pointLight.shadow.camera.near = 0.1;
-    pointLight.shadow.camera.far = 1000;
-    pointLight.shadow.mapSize.width = 2048;
-    pointLight.shadow.mapSize.height = 2048;
+    const dirLight = new DirectionalLight("white", 2);
+    dirLight.position.set(5, 10, 7.5);
+    scene.add(dirLight);
 
-    const scene = getScene();
-    scene.add(ambientLight, pointLight);
     if (lightsFolder) {
-        lightsFolder.add(pointLight, "visible").name("Point Light");
-
-        const pointLightHelper = new PointLightHelper(pointLight, 0.25, "orange");
-        // pointLightHelper.visible = false;
-        lightsFolder.add(pointLightHelper, "visible").name("Point Light Helper");
-
-        scene.add(pointLightHelper);
+        lightsFolder.add(dirLight, "visible").name("Directional Light");
+        lightsFolder.add(dirLight, "intensity").min(0).max(2).step(0.01).name("Directional Light Intensity");
+        const dirLightHelper = new DirectionalLightHelper(dirLight, 0.25, "orange");
+        dirLightHelper.visible = false;
+        lightsFolder.add(dirLightHelper, "visible").name("Directional Light Helper");
+        scene.add(dirLightHelper);
     }
 }
