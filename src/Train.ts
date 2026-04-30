@@ -62,7 +62,7 @@ export class Train {
     #adjustRotation() {
         if (!this.model) return console.warn("No model somehow");
         this.model.rotation.x = 0;
-        this.model.rotation.y = 1;
+        this.model.rotation.y = 3.5;
         this.model.rotation.z = 0.7;
         const gui = getGui();
         const trainFolder = gui?.addFolder("Train");
@@ -109,6 +109,9 @@ export class Train {
     animate(deltaTime: number) {
         if (this.#mixer) {
             this.#mixer.update(deltaTime);
+        }
+        if (this.model) {
+            this.model.rotation.y += deltaTime * 0.1;
         }
     }
 

@@ -54,8 +54,10 @@ train.ready.then(() => {
 
 const timer = new Timer();
 
-function tick() {
+function tick(time: number) {
     requestAnimationFrame(tick);
+
+    timer.update(time);
 
     if (gui && stats) stats.begin();
 
@@ -67,4 +69,4 @@ function tick() {
     if (gui && stats) stats.end();
 }
 
-tick();
+tick(0);
