@@ -4,7 +4,6 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { getGui } from "./getGui";
 import { resizeRendererToDisplaySize } from "./helpers/responsiveness";
 
-// TODO probably use perspective again instead
 export class ProjectCamera {
     instance: PerspectiveCamera;
     #canvas: HTMLCanvasElement;
@@ -23,7 +22,7 @@ export class ProjectCamera {
         const height = canvas.clientHeight;
         const aspect = width / height;
         this.instance = new PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.instance.position.set(6, 4, 6);
+        this.instance.position.set(30, 4, 30);
         this.instance.lookAt(0, 0, 0);
 
         this.#controls = new OrbitControls(this.instance, this.#canvas);
