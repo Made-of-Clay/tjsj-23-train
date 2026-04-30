@@ -1,5 +1,5 @@
 import Stats from "stats.js";
-import { Clock, PCFSoftShadowMap, Timer, WebGLRenderer } from "three";
+import { PCFSoftShadowMap, Timer, WebGLRenderer } from "three";
 import "./style.css";
 import { addHelpers } from "./addHelpers";
 import { addLights } from "./addLights";

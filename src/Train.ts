@@ -1,4 +1,4 @@
-import { AnimationMixer, type Group, type Mesh, MeshToonMaterial, Object3D, type Object3DEventMap } from "three";
+import { AnimationMixer, type Group, type Mesh, MeshToonMaterial, type Object3DEventMap } from "three";
 import { type GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { getGui } from "./getGui";
 import { getScene } from "./getScene";
@@ -93,6 +93,8 @@ export class Train {
         // add some grass planes with alpha textures to hide the hard edges of the train model
     }
 
+    // @ts-expect-error dev testing
+    // biome-ignore lint/correctness/noUnusedPrivateClassMembers: dev testing
     #toonify() {
         this.model?.traverse((child) => {
             if ((child as Mesh).isMesh) {

@@ -1,4 +1,4 @@
-import { AmbientLight, DirectionalLight, DirectionalLightHelper, PointLight, PointLightHelper } from "three";
+import { AmbientLight, DirectionalLight, DirectionalLightHelper } from "three";
 import { getGui } from "./getGui";
 import { getScene } from "./getScene";
 
