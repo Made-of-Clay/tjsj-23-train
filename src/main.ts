@@ -1,5 +1,5 @@
 import Stats from "stats.js";
-import { PCFSoftShadowMap, WebGLRenderer } from "three";
+import { Clock, PCFSoftShadowMap, Timer, WebGLRenderer } from "three";
 import "./style.css";
 import { addHelpers } from "./addHelpers";
 import { addLights } from "./addLights";
@@ -52,11 +52,15 @@ train.ready.then(() => {
     console.log("Train model loaded");
 });
 
+const timer = new Timer();
+
 function tick() {
     requestAnimationFrame(tick);
 
     if (gui && stats) stats.begin();
 
+    const delta = timer.getDelta();
+    train.animate(delta);
     camera.tick(renderer);
     renderer.render(scene, camera.instance);
 

@@ -1,9 +1,12 @@
-import type { Mesh } from "three";
+import { AnimationMixer, type Group, type Mesh, MeshToonMaterial, Object3D, type Object3DEventMap } from "three";
 import { type GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { getGui } from "./getGui";
 import { getScene } from "./getScene";
 
 export class Train {
     ready: Promise<void>;
+    model: Group<Object3DEventMap> | null = null;
+    #mixer: AnimationMixer | null = null;
 
     constructor() {
         this.ready = this.#init();
@@ -13,6 +16,7 @@ export class Train {
         await this.#loadAssets();
         this.#adjustRotation();
         this.#addGrass();
+        // this.#toonify();
     }
 
     #loadAssets(): Promise<void> {
@@ -29,14 +33,23 @@ export class Train {
                     }
 
                     model.traverse((child) => {
-                        if ((child as Mesh).isMesh) {
-                            const mesh = child as Mesh;
-                            // TODO evaluate this - not sure about it
-                            mesh.castShadow = true;
-                            mesh.receiveShadow = true;
-                        }
+                        console.log(child, `animations = ${child.animations.length}`);
+                        // if ((child as Mesh).isMesh) {
+                        //     const mesh = child as Mesh;
+                        //     // TODO evaluate this - not sure about it
+                        //     mesh.castShadow = true;
+                        //     mesh.receiveShadow = true;
+                        // }
                     });
 
+                    this.#mixer = new AnimationMixer(model);
+                    if (!gltf.animations[0]) {
+                        console.error("No animations available", gltf.animations);
+                    }
+                    const action = this.#mixer.clipAction(gltf.animations[0]);
+                    action.play();
+
+                    this.model = model;
                     getScene().add(model);
                     resolve();
                 },
@@ -46,15 +59,57 @@ export class Train {
         });
     }
 
-    #adjustRotation() {}
+    #adjustRotation() {
+        if (!this.model) return console.warn("No model somehow");
+        this.model.rotation.x = 0;
+        this.model.rotation.y = 1;
+        this.model.rotation.z = 0.7;
+        const gui = getGui();
+        const trainFolder = gui?.addFolder("Train");
+        if (trainFolder) {
+            trainFolder
+                .add(this.model.rotation, "x")
+                .min(0)
+                .max(Math.PI * 2)
+                .step(0.01)
+                .name("Rotation X");
+            trainFolder
+                .add(this.model.rotation, "y")
+                .min(0)
+                .max(Math.PI * 2)
+                .step(0.01)
+                .name("Rotation Y");
+            trainFolder
+                .add(this.model.rotation, "z")
+                .min(0)
+                .max(Math.PI * 2)
+                .step(0.01)
+                .name("Rotation Z");
+        }
+    }
 
     #addGrass() {
         // TODO implement
         // add some grass planes with alpha textures to hide the hard edges of the train model
     }
 
-    animate() {
-        // TODO implement
+    #toonify() {
+        this.model?.traverse((child) => {
+            if ((child as Mesh).isMesh) {
+                const mesh = child as Mesh;
+                const originalMaterial = mesh.material;
+                if (originalMaterial && typeof (originalMaterial as any).color !== "undefined") {
+                    const color = (originalMaterial as any).color;
+                    mesh.material = new MeshToonMaterial({ color });
+                }
+            }
+        });
+    }
+
+    animate(deltaTime: number) {
+        if (this.#mixer) {
+            this.#mixer.update(deltaTime);
+        }
     }
 
     toggleDirection() {
