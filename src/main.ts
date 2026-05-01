@@ -10,6 +10,7 @@ import { Train } from "./Train";
 
 // TODO add nice skybox for blue skies or space -- probably blue skies to match more playful theme
 const canvas = document.createElement("canvas");
+canvas.className = "scene-canvas";
 document.body.appendChild(canvas);
 const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
